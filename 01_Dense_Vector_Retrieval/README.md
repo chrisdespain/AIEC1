@@ -88,17 +88,25 @@ Why is metadata important for a RAG application?
 
 ##### ✅ Answer:
 
+It gives summary context about the overall source. This can quickly tell you if RAG is being applied appropriately — more critical when there are numerous, complex sources.
+
 #### ❓Question #3
 
 What tradeoff do we make when choosing chunk size and chunk overlap?
 
 ##### ✅ Answer:
 
+**Chunk size — relevance vs. context window.** Larger chunks may contain relevance for a wider variety of topics, but will use more of the LLM's context window. A smaller chunk may not include enough relevant information for the LLM to give a useful answer, but if it does, it should be considerably more precise.
+
+**Chunk overlap — continuity vs. redundancy.** More overlap preserves the continuity of a document across chunk boundaries but increases redundancy and decreases potential precision. Less overlap increases the likelihood that ideas or concepts are interrupted or incomplete.
+
 #### ❓Question #4
 
 What does a similarity score help you understand, and what does it not prove by itself?
 
 ##### ✅ Answer:
+
+It's a relative ranking of the semantic similarity between the retrieved chunk and the query, useful for filtering and ordering results. It does not mean the chunk is absolutely relevant or factually correct — a higher score only means there's a higher probability the subject matter is similar, not that the content answers the question.
 
 ---
 
@@ -115,6 +123,8 @@ For the vibe check queries, did the retrieved context seem relevant before gener
 
 ##### ✅ Answer:
 
+It varied by query. For the first two questions (preventive care, when to call a vet) the retrieved context was very relevant. For the nutrition question the context was less directly helpful — the source is a clinically-focused vet guideline (treatment of cats) rather than an owner-care guide, so nutritional detail was thin. For the taxes question, RAG still retrieved context due to semantic overlap, but with very low scores, and the model correctly declined to answer from it.
+
 ---
 
 ## 🏗️ Activity #4: Tune Retrieval
@@ -130,13 +140,15 @@ Document what changed and whether retrieval improved.
 
 ##### Settings Changed:
 
--
+- **Experiment 1:** Chunk size 1000 → 200, overlap 200 → 100 (smaller chunks)
+- **Experiment 2:** Chunk size 1000 → 2000, overlap 200 → 500 (larger chunks)
+- **Experiment 3:** k 4 → 20, original chunk size/overlap restored
 
 ##### Results:
 
-1.
-2.
-3.
+1. **Smaller chunks (size=200, overlap=100):** Retrieval got worse. Chunks were too small to provide sufficient context at k=4, resulting in fewer identifiable concerns being surfaced.
+2. **Larger chunks (size=2000, overlap=500):** Retrieval improved. Larger, more comprehensive chunks gave the model better context. Appropriate for a small source document where context-window pressure is low.
+3. **Higher k (k=20):** No meaningful improvement. The model only cited ~6 of the 20 retrieved documents, producing an answer nearly identical to k=4.
 
 ---
 
