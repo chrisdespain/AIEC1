@@ -69,7 +69,7 @@ Why is cosine similarity useful for dense vector retrieval?
 
 ##### ✅ Answer:
 
----
+It is a method that can quickly identify vectors that are semantically similar. This produces a quick rank against available chunks of data that might be used for RAG.
 
 ## 🏗️ Activity #2: Build the Vector RAG Pipeline
 
@@ -96,9 +96,10 @@ What tradeoff do we make when choosing chunk size and chunk overlap?
 
 ##### ✅ Answer:
 
-**Chunk size — relevance vs. context window.** Larger chunks may contain relevance for a wider variety of topics, but will use more of the LLM's context window. A smaller chunk may not include enough relevant information for the LLM to give a useful answer, but if it does, it should be considerably more precise.
+Chunk size - relevance vs. context window. Larger chunks may contain relevance for a wider variety of topics, but it will use more of the llm's context window. A smaller chunk may not include enough relevant information for the llm to give a useful answer, but if it does, it should be considerably more precise.
 
-**Chunk overlap — continuity vs. redundancy.** More overlap preserves the continuity of a document across chunk boundaries but increases redundancy and decreases potential precision. Less overlap increases the likelihood that ideas or concepts are interrupted or incomplete.
+
+Chunk overlap - more overlap will preserve continuity of a document, but increase redundancy / decrease potential precision. Less overlap increases the likelihood that ideas or concepts are interrupted/incomplete.
 
 #### ❓Question #4
 
@@ -106,8 +107,7 @@ What does a similarity score help you understand, and what does it not prove by 
 
 ##### ✅ Answer:
 
-It's a relative ranking of the semantic similarity between the retrieved chunk and the query, useful for filtering and ordering results. It does not mean the chunk is absolutely relevant or factually correct — a higher score only means there's a higher probability the subject matter is similar, not that the content answers the question.
-
+Directionally similar, but not absolutely correct --> It's a relative ranking of the semantic similarity between the retrieval to query that can be used for filtering. It does not mean that is absolutely relevant or factually correct. A higher score means there's a higher probability the subject matter is similar. 
 ---
 
 ## 🏗️ Activity #3: Vibe Check Retrieval Quality
@@ -123,7 +123,7 @@ For the vibe check queries, did the retrieved context seem relevant before gener
 
 ##### ✅ Answer:
 
-It varied by query. For the first two questions (preventive care, when to call a vet) the retrieved context was very relevant. For the nutrition question the context was less directly helpful — the source is a clinically-focused vet guideline (treatment of cats) rather than an owner-care guide, so nutritional detail was thin. For the taxes question, RAG still retrieved context due to semantic overlap, but with very low scores, and the model correctly declined to answer from it.
+It varied by request. RAG still retrieved context for the taxes question due to semantic similarity (albiet very low). For the first 2 questions, the context appears to be very relevant. Those make sense given the source for rag -- it appears to be a vet facing set of guidelines. While vets will give nutritional advice, the source appears to be more clinically focused - treatment of cats vs. owner care of cats.
 
 ---
 
@@ -146,9 +146,9 @@ Document what changed and whether retrieval improved.
 
 ##### Results:
 
-1. **Smaller chunks (size=200, overlap=100):** Retrieval got worse. Chunks were too small to provide sufficient context at k=4, resulting in fewer identifiable concerns being surfaced.
-2. **Larger chunks (size=2000, overlap=500):** Retrieval improved. Larger, more comprehensive chunks gave the model better context. Appropriate for a small source document where context-window pressure is low.
-3. **Higher k (k=20):** No meaningful improvement. The model only cited ~6 of the 20 retrieved documents, producing an answer nearly identical to k=4.
+1. Smaller chunks (size=200, overlap=100): Retrieval got worse. Chunks were too small to provide sufficient context at k=4, resulting in fewer identifiable concerns being surfaced.
+2. Larger chunks (size=2000, overlap=500): Retrieval improved. Larger, more comprehensive chunks gave the model better context. Appropriate for a small source document where context-window pressure is low.
+3. Higher k (k=20): No meaningful improvement. The model only cited ~6 of the 20 retrieved documents, producing an answer nearly identical to k=4.
 
 ---
 

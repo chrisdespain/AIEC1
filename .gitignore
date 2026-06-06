@@ -8,3 +8,6 @@ __pycache__/
 uv.lock
 workspace
 AIEC1.code-workspace
+.claude/
+.windsurf/
+.python-version
