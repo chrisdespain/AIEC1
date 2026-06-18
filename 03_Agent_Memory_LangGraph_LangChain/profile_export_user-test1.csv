@@ -1,0 +1,4 @@
+field,value,source,updated_at,consent
+cat_name,Ringo,user_confirmed,2026-06-16T01:06:21.882915+00:00,True
+cat_weight_kg,4.5,user_confirmed,2026-06-16T01:06:21.883939+00:00,True
+last_vet_visit,3 months ago,user_confirmed,2026-06-16T01:06:21.887901+00:00,True
