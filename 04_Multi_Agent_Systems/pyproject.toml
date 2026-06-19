@@ -16,3 +16,7 @@ dependencies = [
 
 [tool.uv]
 package = false
+
+[[tool.uv.index]]
+url = "https://sstp.jfrog.io/artifactory/api/pypi/pypi/simple"
+default = true
