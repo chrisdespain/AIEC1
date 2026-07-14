@@ -14,4 +14,9 @@ dependencies = [
     "langchain-openai>=1.1.10",
     "dotenv>=0.9.9",
     "ipykernel>=7.2.0",
+    "ngrok>=1.7.0",
 ]
+
+[[tool.uv.index]]
+url = "https://sstp.jfrog.io/artifactory/api/pypi/pypi/simple"
+default = true
