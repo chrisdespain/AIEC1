@@ -40,6 +40,7 @@ Available MCP tools:
 
 - `list_products`
 - `get_product`
+- `search_products`
 - `add_to_cart`
 - `view_cart`
 - `remove_from_cart`
@@ -168,6 +169,10 @@ _(insert your answer here)_
 ## Activity 1: Extend the MCP Server
 
 Add at least one new tool to the cat shop MCP server (e.g., `search_products`, `update_cart_quantity`, or `get_order_history`). Ensure the new tool integrates properly with the existing database and OAuth authentication. Demo the new tool through an MCP client and include it in your Loom video.
+
+### Completed: `search_products`
+
+The `search_products` tool performs semantic search across the product catalog. It embeds each product's name, description, and category using OpenAI `text-embedding-3-small`, stores the vectors in an in-memory Qdrant collection, and returns the top matching products ranked by similarity score. Try searching with natural language like "comfortable place for a cat to sleep" or "treats for feeding" in your Loom demo.
 
 ## Advanced Activity: Build a Custom MCP Client
 

@@ -2,6 +2,7 @@ import secrets
 
 from mcp.server.auth.middleware.auth_context import get_access_token
 
+from .retrieval import search_products as _semantic_search
 from .server import mcp, oauth_provider
 
 
@@ -53,6 +54,12 @@ async def get_product(product_id: int) -> dict:
         "price": row[3],
         "category": row[4],
     }
+
+
+@mcp.tool()
+async def search_products(query: str) -> list[dict]:
+    """Search the cat shop catalog using natural language. Returns the most relevant products."""
+    return await _semantic_search(query)
 
 
 @mcp.tool()
