@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Cat Health Agent",
-  description: "A LangGraph agent chat UI built with Next.js and shadcn/ui",
+  title: "Whisker Health",
+  description: "Evidence-informed cat care guidance, grounded in trusted resources.",
 };
 
 export default function RootLayout({
