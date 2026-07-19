@@ -9,7 +9,9 @@ WORKDIR /app
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 COPY pyproject.toml ./
-RUN uv sync --no-dev --no-install-project
+# Override corporate Artifactory index — use public PyPI in CI
+ENV UV_DEFAULT_INDEX=https://pypi.org/simple
+RUN uv lock --upgrade && uv sync --no-dev --no-install-project
 
 COPY langgraph.json ./
 COPY app/ ./app/
