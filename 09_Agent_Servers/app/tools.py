@@ -5,9 +5,7 @@ import threading
 import time
 from typing import List
 
-import arxiv
 from langchain_core.tools import tool
-from langchain_tavily import TavilySearch
 
 from app.rag import retrieve_information
 
@@ -24,6 +22,8 @@ def arxiv_search(query: str, max_results: int = 3) -> str:
     discovery and use AND only when every term must match. Use at most five
     focused terms. Example: all:cat OR all:feline OR all:sleep
     """
+    import arxiv
+
     global _last_arxiv_request
 
     query = query.strip()
@@ -83,5 +83,7 @@ def arxiv_search(query: str, max_results: int = 3) -> str:
 
 
 def get_tool_belt() -> List:
+    from langchain_tavily import TavilySearch
+
     tavily_tool = TavilySearch(max_results=5)
     return [tavily_tool, arxiv_search, retrieve_information]

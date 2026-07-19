@@ -4,22 +4,26 @@ import os
 from functools import lru_cache
 from typing import Annotated
 
-import tiktoken
-from langchain_community.document_loaders import DirectoryLoader, PyMuPDFLoader
 from langchain_core.tools import tool
-from langchain_openai.embeddings import OpenAIEmbeddings
-from langchain_qdrant import QdrantVectorStore
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small"
 
 
 def _tiktoken_len(text: str) -> int:
+    import tiktoken
+
     return len(tiktoken.encoding_for_model("gpt-4o").encode(text))
 
 
 @lru_cache(maxsize=1)
 def _get_retriever():
+    # Heavy imports are deferred to first use so the graph module imports fast
+    # (keeps container startup under Vercel's port-bind timeout).
+    from langchain_community.document_loaders import DirectoryLoader, PyMuPDFLoader
+    from langchain_openai.embeddings import OpenAIEmbeddings
+    from langchain_qdrant import QdrantVectorStore
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+
     data_dir = os.environ.get("RAG_DATA_DIR", "data")
 
     try:
