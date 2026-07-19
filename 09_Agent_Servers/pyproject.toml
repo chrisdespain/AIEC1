@@ -20,4 +20,9 @@ dependencies = [
     "tiktoken>=0.12.0",
     "arxiv>=2.1.0",
     "python-dotenv>=1.2.2",
+    "vercel>=0.7.1",
 ]
+
+[[tool.uv.index]]
+url = "https://sstp.jfrog.io/artifactory/api/pypi/pypi/simple"
+default = true
