@@ -30,7 +30,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getMessageText, toolLabel } from "@/lib/messages";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
+function resolveApiUrl() {
+  const configured = process.env.NEXT_PUBLIC_API_URL;
+  if (configured) return configured;
+  if (typeof window !== "undefined") return `${window.location.origin}/api`;
+  return "/api";
+}
 
 type StreamMessage = ReturnType<typeof useStream>["messages"][number];
 
@@ -59,7 +64,7 @@ function toolIcon(name?: string) {
 }
 
 export function Chat({ assistantId }: { assistantId: string }) {
-  const stream = useStream({ apiUrl: API_URL, assistantId });
+  const stream = useStream({ apiUrl: resolveApiUrl(), assistantId });
   const { messages, isLoading, error } = stream;
   const [input, setInput] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
