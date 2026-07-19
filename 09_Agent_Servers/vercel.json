@@ -3,17 +3,9 @@
     "frontend": {
       "root": "frontend/",
       "entrypoint": "Dockerfile.vercel"
-    },
-    "backend": {
-      "root": "./",
-      "entrypoint": "Dockerfile.vercel"
     }
   },
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": { "service": "backend" }
-    },
     {
       "source": "/(.*)",
       "destination": { "service": "frontend" }
