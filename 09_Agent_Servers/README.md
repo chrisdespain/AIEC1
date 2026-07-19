@@ -127,6 +127,7 @@ Set these in the Vercel project (Settings → Environment Variables, or `vercel 
 ```text
 LANGGRAPH_API_URL=https://your-deployment.us.langgraph.app
 LANGSMITH_API_KEY=lsv2_pt_...
+ACCESS_CODE=sixthst
 NEXT_PUBLIC_API_URL=https://your-app.vercel.app/api
 ```
 
@@ -316,6 +317,7 @@ LANGSMITH_API_KEY=
 # LANGSMITH_API_KEY=lsv2_pt_...
 
 NEXT_PUBLIC_API_URL=http://localhost:3000/api
+ACCESS_CODE=sixthst_ai_class
 ```
 
 Install deps (first time) and run the frontend:
@@ -337,12 +339,14 @@ Commit the `frontend/` directory (either in the same repo as your agent or a sep
 ### 2. Import the project in Vercel
 
 1. Go to [vercel.com/new](https://vercel.com/new) and import your repository
-2. Set the **Root Directory** to `frontend` if the Next.js app is not at the repo root
+2. Set the **Root Directory** to `frontend` if the Next.js app is not at the repo root (in this monorepo, use `09_Agent_Servers/frontend`)
 3. Add environment variables in the Vercel project settings:
 
 ```text
 LANGGRAPH_API_URL=https://your-deployment.us.langgraph.app
 LANGSMITH_API_KEY=lsv2_pt_...
+ACCESS_CODE=sixthst_ai_class
+# Optional — falls back to same-origin /api when unset
 NEXT_PUBLIC_API_URL=https://your-app.vercel.app/api
 ```
 
@@ -350,7 +354,7 @@ NEXT_PUBLIC_API_URL=https://your-app.vercel.app/api
 
 ### 3. Verify end-to-end
 
-Visit your Vercel URL, send a chat message, and confirm:
+Visit your Vercel URL, enter the access code, send a chat message, and confirm:
 
 - The UI streams agent responses
 - Tool calls work against your deployed agent
