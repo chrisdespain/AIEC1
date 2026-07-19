@@ -345,7 +345,7 @@ Commit the `frontend/` directory (either in the same repo as your agent or a sep
 ```text
 LANGGRAPH_API_URL=https://your-deployment.us.langgraph.app
 LANGSMITH_API_KEY=lsv2_pt_...
-ACCESS_CODE=sixthst_ai_class
+ACCESS_CODE=sixthst_...
 # Optional — falls back to same-origin /api when unset
 NEXT_PUBLIC_API_URL=https://your-app.vercel.app/api
 ```

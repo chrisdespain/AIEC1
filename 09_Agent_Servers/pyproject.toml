@@ -22,6 +22,9 @@ dependencies = [
     "python-dotenv>=1.2.2",
 ]
 
+[tool.setuptools]
+packages = ["app"]
+
 # NOTE: The corporate Artifactory index is intentionally NOT declared here so
 # that cloud builds (LangSmith Deployment) use public PyPI. For local builds
 # that must use Artifactory, configure it at the user level instead — see

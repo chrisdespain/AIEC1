@@ -2,7 +2,7 @@ import { Cat, ShieldCheck } from "lucide-react";
 
 import { Chat } from "@/components/chat";
 
-const ASSISTANT_ID = "simple_agent";
+const ASSISTANT_ID = "agent";
 
 export default function Page() {
   return (
