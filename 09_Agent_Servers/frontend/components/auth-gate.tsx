@@ -20,7 +20,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       }
     }
     // Check if auth is even required (server-side check with empty code)
-    fetch("/api/auth", {
+    fetch("/auth/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code: "" }),
@@ -36,7 +36,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await fetch("/api/auth", {
+    const res = await fetch("/auth/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code: code.trim() }),
