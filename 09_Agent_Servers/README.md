@@ -125,9 +125,9 @@ vercel --prod                      # production deploy
 Set these in the Vercel project (Settings → Environment Variables, or `vercel env add`), then run `vercel --prod` again:
 
 ```text
-LANGGRAPH_API_URL=https://your-deployment.us.langgraph.app
+LANGGRAPH_API_URL=https://agent-servers-09-fdb49416a8345bf88b9faf5dee99cb4b.us.langgraph.app
 LANGSMITH_API_KEY=lsv2_pt_...
-ACCESS_CODE=sixthst
+ACCESS_CODE=sixthst_...
 NEXT_PUBLIC_API_URL=https://your-app.vercel.app/api
 ```
 
@@ -294,14 +294,14 @@ import { useStream } from "@langchain/react";
 export default function ChatPage() {
   const { messages, submit, isLoading } = useStream({
     apiUrl: process.env.NEXT_PUBLIC_API_URL ?? "/api",
-    assistantId: "agent",
+    assistantId: "simple_agent",
   });
 
   // Render messages and a form that calls submit({ messages: [...] })
 }
 ```
 
-Use the `assistantId` that matches your `langgraph.json` assistants block.
+Use the `assistantId` that matches the graph ID in your `langgraph.json` `graphs` block (the runtime accepts a registered graph ID or a valid assistant UUID).
 
 ### 4. Test locally
 
@@ -313,7 +313,7 @@ LANGGRAPH_API_URL=http://localhost:2024
 LANGSMITH_API_KEY=
 
 # ...or point at your deployed LangSmith agent instead:
-# LANGGRAPH_API_URL=https://your-deployment.us.langgraph.app
+# LANGGRAPH_API_URL=https://agent-servers-09-fdb49416a8345bf88b9faf5dee99cb4b.us.langgraph.app
 # LANGSMITH_API_KEY=lsv2_pt_...
 
 NEXT_PUBLIC_API_URL=http://localhost:3000/api
@@ -343,7 +343,7 @@ Commit the `frontend/` directory (either in the same repo as your agent or a sep
 3. Add environment variables in the Vercel project settings:
 
 ```text
-LANGGRAPH_API_URL=https://your-deployment.us.langgraph.app
+LANGGRAPH_API_URL=https://agent-servers-09-fdb49416a8345bf88b9faf5dee99cb4b.us.langgraph.app
 LANGSMITH_API_KEY=lsv2_pt_...
 ACCESS_CODE=sixthst_...
 # Optional — falls back to same-origin /api when unset
