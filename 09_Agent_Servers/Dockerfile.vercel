@@ -1,0 +1,21 @@
+FROM python:3.13-slim
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends build-essential && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+COPY pyproject.toml ./
+RUN uv sync --no-dev --no-install-project
+
+COPY langgraph.json ./
+COPY app/ ./app/
+COPY data/ ./data/
+COPY serve.py ./
+
+# Secrets (OPENAI_API_KEY, TAVILY_API_KEY, etc.) are injected by Vercel env vars.
+# Vercel injects $PORT; serve.py reads it (defaults to 2024).
+CMD ["uv", "run", "python", "serve.py"]
