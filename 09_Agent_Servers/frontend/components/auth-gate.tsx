@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import { Cat, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const ACCESS_CODE = process.env.NEXT_PUBLIC_ACCESS_CODE ?? "";
-
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const [authenticated, setAuthenticated] = useState(false);
   const [code, setCode] = useState("");
@@ -15,14 +13,35 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const stored = sessionStorage.getItem("auth");
-      if (stored === "1") setAuthenticated(true);
+      if (stored === "1") {
+        setAuthenticated(true);
+        setChecking(false);
+        return;
+      }
     }
-    setChecking(false);
+    // Check if auth is even required (server-side check with empty code)
+    fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: "" }),
+    })
+      .then((res) => {
+        if (res.ok) {
+          // No access code configured — skip gate
+          setAuthenticated(true);
+        }
+      })
+      .finally(() => setChecking(false));
   }, []);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (code.trim() === ACCESS_CODE) {
+    const res = await fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: code.trim() }),
+    });
+    if (res.ok) {
       sessionStorage.setItem("auth", "1");
       setAuthenticated(true);
       setError(false);
@@ -33,7 +52,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (checking) return null;
 
-  if (!ACCESS_CODE || authenticated) {
+  if (authenticated) {
     return <>{children}</>;
   }
 
