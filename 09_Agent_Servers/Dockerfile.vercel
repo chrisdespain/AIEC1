@@ -20,4 +20,7 @@ COPY serve.py ./
 
 # Secrets (OPENAI_API_KEY, TAVILY_API_KEY, etc.) are injected by Vercel env vars.
 # Vercel injects $PORT; serve.py reads it (defaults to 2024).
-CMD ["uv", "run", "python", "serve.py"]
+ENV PYTHONUNBUFFERED=1
+# Run the venv Python directly to avoid `uv run` re-sync overhead at startup
+# (helps meet Vercel's 15s port-bind timeout).
+CMD [".venv/bin/python", "serve.py"]
