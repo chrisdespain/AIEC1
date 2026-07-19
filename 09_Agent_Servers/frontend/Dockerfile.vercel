@@ -9,6 +9,8 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Provide a placeholder so the build doesn't fail; the real value is injected at runtime.
+ENV LANGGRAPH_API_URL=http://placeholder:2024
 RUN npm run build
 
 FROM base AS runner
