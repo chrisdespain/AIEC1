@@ -11,3 +11,5 @@ AIEC1.code-workspace
 .claude/
 .windsurf/
 .python-version
+.vercel
+.env*
