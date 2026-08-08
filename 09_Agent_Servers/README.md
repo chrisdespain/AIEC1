@@ -125,7 +125,7 @@ vercel --prod                      # production deploy
 Set these in the Vercel project (Settings → Environment Variables, or `vercel env add`), then run `vercel --prod` again:
 
 ```text
-LANGGRAPH_API_URL=https://agent-servers-09-fdb49416a8345bf88b9faf5dee99cb4b.us.langgraph.app
+LANGGRAPH_API_URL=https://agent-servers-09-v2-073bf93fce5f503da8217e4a4420afec.us.langgraph.app
 LANGSMITH_API_KEY=lsv2_pt_...
 ACCESS_CODE=sixthst_...
 NEXT_PUBLIC_API_URL=https://your-app.vercel.app/api
@@ -313,7 +313,7 @@ LANGGRAPH_API_URL=http://localhost:2024
 LANGSMITH_API_KEY=
 
 # ...or point at your deployed LangSmith agent instead:
-# LANGGRAPH_API_URL=https://agent-servers-09-fdb49416a8345bf88b9faf5dee99cb4b.us.langgraph.app
+# LANGGRAPH_API_URL=https://agent-servers-09-v2-073bf93fce5f503da8217e4a4420afec.us.langgraph.app
 # LANGSMITH_API_KEY=lsv2_pt_...
 
 NEXT_PUBLIC_API_URL=http://localhost:3000/api
@@ -343,7 +343,7 @@ Commit the `frontend/` directory (either in the same repo as your agent or a sep
 3. Add environment variables in the Vercel project settings:
 
 ```text
-LANGGRAPH_API_URL=https://agent-servers-09-fdb49416a8345bf88b9faf5dee99cb4b.us.langgraph.app
+LANGGRAPH_API_URL=https://agent-servers-09-v2-073bf93fce5f503da8217e4a4420afec.us.langgraph.app
 LANGSMITH_API_KEY=lsv2_pt_...
 ACCESS_CODE=sixthst_...
 # Optional — falls back to same-origin /api when unset
@@ -432,7 +432,7 @@ Why does LangSmith deploy your agent as an API backend only, and why do you stil
 
 #### Answer
 
-_(insert your answer here)_
+LangSmith Deployments are purpose-built to run and manage a LangGraph graph as a service: they expose the threads/runs/assistants API, handle streaming, persist checkpoints, and give you tracing and monitoring for every invocation. That is a backend concern — there is no notion of a browser UI, static assets, or client-side routing anywhere in that product. Baking a UI into the same service would tie the two together for no benefit: I would not be able to scale, cache, or redeploy the chat interface independently of the agent, and I would lose Vercel's strengths (edge/static hosting, preview deploys per PR, CDN-served assets) as well as LangSmith's strengths (graph execution, tracing, checkpointing). Keeping them separate lets each platform do the one thing it is optimized for, and it mirrors how the `frontend/` Next.js app in this repo talks to the deployed graph purely over HTTP through `LANGGRAPH_API_URL` rather than being co-located with it.
 
 ### Question #2
 
@@ -440,11 +440,44 @@ Why should the LangSmith API key live in a Next.js API route (server-side) inste
 
 #### Answer
 
-_(insert your answer here)_
+Anything shipped to the browser — including `NEXT_PUBLIC_*` env vars, inline JS, or client component code — is visible to any user who opens dev tools or views the page source. If `LANGSMITH_API_KEY` were embedded client-side, anyone could extract it and make authenticated calls directly against the LangSmith deployment: running up usage/cost on my account, hitting other assistants/threads, or bypassing whatever access control the frontend enforces. Routing requests through a Next.js API route (`app/api/[...path]/route.ts` using `langgraph-nextjs-api-passthrough`) keeps the key on the server: the browser only ever talks to my own `/api/*` endpoint, and that server-side code injects the real API key when it forwards the request to `LANGGRAPH_API_URL`. This is the same reason the access-code gate (`app/auth/verify/route.ts`) checks the code server-side instead of comparing it in client JS — secrets and authorization checks have to happen somewhere the user can't read or tamper with.
 
 ## Activity 1: Build a Helpfulness Loop in Production
 
 Build an `agent_with_helpfulness` graph that adds a post-response helpfulness check: after the agent answers, a judge model decides whether the response is helpful, and if not, the graph loops back for another attempt (with a safe loop limit). Register it in `langgraph.json`, deploy it, then compare LangSmith traces for queries that pass vs. fail the helpfulness check. Does the retry loop behave differently in Studio vs. production?
+
+#### What was built
+
+`app/graphs/agent_with_helpfulness.py` adds an `agent` → `action`/`helpfulness` → `agent` (loop) → `END` graph on top of the same model and tool belt used by `simple_agent`. The `helpfulness` node prompts a judge model with the original query and the latest response, records a `HELPFULNESS:Y`/`HELPFULNESS:N` verdict as a message, and routes back to `agent` on "N". A hard `MAX_MESSAGES = 12` guard in `helpfulness_node` forces a `HELPFULNESS:END` verdict once the thread grows past that limit, regardless of the judge's opinion, so the loop cannot run forever. It's registered in `langgraph.json` alongside `simple_agent`.
+
+#### Deployment
+
+Deployed directly with `uv run langgraph deploy --remote --name agent-servers-09-v2` (the original `agent-servers-09` LangSmith deployment from earlier in the course had since been torn down, and its name was still reserved by an existing tracing project, so this activity's build went out under a new deployment name):
+
+```text
+https://agent-servers-09-v2-073bf93fce5f503da8217e4a4420afec.us.langgraph.app
+```
+
+#### Trace comparison
+
+Two runs against the deployed instance, both through `agent_with_helpfulness`:
+
+| Case | Query | Messages | LLM calls | Latency | Tokens | Outcome |
+|---|---|---|---|---|---|---|
+| Pass immediately | "Say hello in one short sentence." | 2 | 2 | ~1.55s | 1,479 | `HELPFULNESS:Y` on first pass |
+| Looped to the limit | "What core vaccines do kittens need? Use retrieve_information tool." | 13 | 10 | ~15.9s | 23,217 | Judge kept returning `HELPFULNESS:N`; `MAX_MESSAGES` forced `HELPFULNESS:END` |
+
+The looping case is a good illustration of why the guard matters: the judge model considered a factually correct, RAG-grounded answer "not helpful" five times in a row (its bar seemed to want something like a numbered clinical protocol rather than a prose summary), and a couple of the regenerated attempts came back with empty content — the model wasn't materially improving the answer, it was just re-answering. Without the loop-limit guard this would have run indefinitely, burning tokens and latency for no quality gain. That's the practical argument for the safety cap over relying on the judge alone.
+
+#### Does the retry loop behave differently in Studio vs. production?
+
+No — functionally it's the same compiled graph either way, and testing confirmed this: running the identical "kitten vaccines" query through the local `langgraph dev` server (what backs Studio) produced the same node path (`agent → helpfulness → agent`, looped, then forced end via `MAX_MESSAGES`) as the production deployment. What differs is the surrounding tooling and infrastructure, not the graph logic:
+
+- **Latency**: local dev has no network hop and a lighter in-memory runtime, so the same loop completes faster locally than against the hosted deployment.
+- **Observability**: Studio gives step-by-step visual debugging of a single run; the LangSmith production project aggregates traces across runs/threads with token and cost accounting, which is what made it possible to pull the table above.
+- **Persistence**: the hosted deployment persists threads/checkpoints server-side across requests; the local dev server's persistence is ephemeral to that process.
+
+The loop and its safety guard are graph-level logic, so they execute identically regardless of which runtime is hosting the graph.
 
 ## Advanced Activity: Auth and Custom Routes
 
