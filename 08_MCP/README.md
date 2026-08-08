@@ -156,7 +156,9 @@ Why is OAuth important for MCP servers, and what security considerations should 
 
 #### Answer
 
-_(insert your answer here)_
+OAuth matters because MCP tools aren't just returning info - they're doing real actions (adding to cart, checking out) on behalf of a specific user. Without it, anyone hitting the server could act as anyone else, which gets dangerous fast once the server is public via ngrok instead of just running on your own machine. Tokens tie every request back to a username, expire after an hour, and can be scoped to read vs write, so a leaked token doesn't hand over everything forever.
+
+The main things I'd watch for: don't give every tool write access by default (browsing should only need read), validate everything server-side instead of trusting what the model sends (e.g. checkout should recompute totals from the DB, not take the agent's word for it), and make sure the authorization flow itself is locked down so a request can't be hijacked or redirected somewhere it shouldn't go. Also worth remembering the client itself is holding onto tokens - if that's an AI agent, you don't want tokens leaking into logs or prompts.
 
 ### Question #2
 
@@ -164,7 +166,9 @@ What is Streamable HTTP transport in MCP, and why might you expose a server publ
 
 #### Answer
 
-_(insert your answer here)_
+Streamable HTTP is the transport where the client talks to the server over normal HTTP requests (with streaming support for longer responses), instead of stdio where the client spawns the server as a local subprocess and talks over stdin/stdout. In this project the server just listens on `0.0.0.0:8000` with an `/mcp` endpoint, and the client connects to it like any URL.
+
+stdio only really works when one client owns one local server process - fine for a personal tool, but it can't serve multiple users at once or run somewhere other than the client's machine. Exposing over HTTP (via ngrok here) lets the server be shared - one running instance, one product DB, many users each with their own cart - and reachable from any client, not just ones that can spawn the process locally. That's also exactly why OAuth becomes necessary: with stdio, spawning the process is the trust boundary, but once you're reachable over the network you need a real way to know who's calling.
 
 ## Activity 1: Extend the MCP Server
 
