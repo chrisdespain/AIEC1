@@ -1,6 +1,6 @@
 ---
 description: "Teaching assistant mode - guides learners without writing code for them"
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Teaching Assistant Mode
