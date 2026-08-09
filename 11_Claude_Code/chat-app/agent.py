@@ -32,22 +32,24 @@ async def stream_response(
     # Respect that restriction: skip mcp_servers in enterprise environments so
     # the agent can still run using built-in tools (Read, Glob, Grep).
     # Set AGENT_DYNAMIC_MCP=1 to re-enable when the enterprise restriction is lifted.
+    # Enterprise accounts block dynamic MCP server injection.
+    # Set AGENT_DYNAMIC_MCP=1 in .env to enable custom tools once the restriction is lifted.
     use_dynamic_mcp = os.getenv("AGENT_DYNAMIC_MCP", "0") == "1"
-    extra_mcp = {"mcp_servers": {"concierge": _get_server()}} if use_dynamic_mcp else {}
+
+    _MCP_TOOLS = [
+        "mcp__concierge__list_packages",
+        "mcp__concierge__git_log",
+        "mcp__concierge__find_exports",
+        "mcp__concierge__recent_features",
+        "mcp__concierge__search_features",
+    ]
 
     opts = ClaudeAgentOptions(
         system_prompt=SYSTEM_PROMPT,
-        allowed_tools=[
-            "Read", "Glob", "Grep",
-            "mcp__concierge__list_packages",
-            "mcp__concierge__git_log",
-            "mcp__concierge__find_exports",
-            "mcp__concierge__recent_features",
-            "mcp__concierge__search_features",
-        ],
+        allowed_tools=["Read", "Glob", "Grep"] + (_MCP_TOOLS if use_dynamic_mcp else []),
         cwd=REPO_PATH,
         max_turns=25,
-        **extra_mcp,
+        **({"mcp_servers": {"concierge": _get_server()}} if use_dynamic_mcp else {}),
         **({"resume": session_id} if session_id else {}),
     )
 
@@ -61,7 +63,9 @@ async def stream_response(
                     if isinstance(block, TextBlock):
                         yield f'data: {json.dumps({"type": "text", "delta": block.text})}\n\n'
                     elif isinstance(block, ToolUseBlock):
-                        yield f'data: {json.dumps({"type": "tool", "name": block.name, "input": str(block.input)[:200]})}\n\n'
+                        raw = str(block.input)
+                        inp = raw[:200] + ("…" if len(raw) > 200 else "")
+                        yield f'data: {json.dumps({"type": "tool", "name": block.name, "input": inp})}\n\n'
                     # ThinkingBlock and other block types are silently skipped
 
             elif isinstance(msg, ResultMessage):
