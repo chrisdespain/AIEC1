@@ -22,12 +22,14 @@ class ChatRequest(BaseModel):
     message: str
     conversation_id: str
 
+_STATIC_DIR = Path(__file__).parent / "static"
+
 @app.get("/")
 async def index():
-    return FileResponse("static/index.html")
+    return FileResponse(_STATIC_DIR / "index.html")
 
 @app.post("/api/chat")
 async def chat(req: ChatRequest):
     return {"reply": req.message}
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
