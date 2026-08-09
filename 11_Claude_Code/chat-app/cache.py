@@ -1,8 +1,7 @@
 import re
-from collections import defaultdict
 
 _store: dict[str, str] = {}
-_freq: dict[str, int] = defaultdict(int)
+_freq: dict[str, int] = {}
 
 def normalize(query: str) -> str:
     cleaned = re.sub(r'[^\w\s]', '', query.lower())
@@ -14,7 +13,7 @@ def get(query: str) -> str | None:
 def put(query: str, answer: str) -> None:
     key = normalize(query)
     _store[key] = answer
-    _freq[key] += 1
+    _freq[key] = _freq.get(key, 0) + 1
 
 def top(n: int = 10) -> list[dict]:
     ranked = sorted(_freq.keys(), key=lambda k: _freq[k], reverse=True)
