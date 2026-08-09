@@ -83,7 +83,9 @@ What is the difference between serverless and dedicated endpoints?
 
 #### ✅ Answer:
 
-_(insert your answer here)_
+A serverless endpoint is a shared, multi-tenant capacity that Fireworks already has running. There's nothing to provision, I just point chat at the model identifier and start sending requests, and I pay per token with no idle cost. The trade-off is that I'm sharing capacity with everyone else calling that same model, so under load my latency and throughput are at the mercy of however busy Fireworks' shared pool is at that moment.
+
+A dedicated endpoint reserves capacity exclusively for my account. That buys predictable, consistent latency and throughput because I'm not competing with other tenants' traffic, and I get to control scaling behavior directly. The cost model flips too: instead of paying per token, I'm paying by the hour (the on-demand pricing shown in the Fireworks console) whether or not I'm actively sending requests.
 
 ### ❓ Question #2:
 
@@ -91,7 +93,9 @@ Why is it important to consider token throughput and latency when choosing an LL
 
 #### ✅ Answer:
 
-_(insert your answer here)_
+`endpoint_slammer.ipynb` firing 24 concurrent async requests at the Fireworks endpoint was a direct test of throughput under load. If the endpoint couldn't keep up, some of those calls would have queued, timed out, or come back noticeably slower than the single-request baseline. For a user-facing app, that's the difference between a chat response that feels instant and one where the user is left staring at a spinner, and it gets worse as concurrent usage scales up.
+
+Activity 1 made the latency/cost trade-off concrete rather than theoretical: across the same five questions, the Fireworks `gpt-oss-20b` pipeline averaged roughly 4.6 seconds per response while the OpenAI `gpt-4.1-mini` pipeline averaged about 1.5 seconds. However, Fireworks cost around $0.0002 per query versus $0.0011–0.0012 for OpenAI, so the faster model was also 5-6x more expensive per call. Neither choice is "correct" in the abstract; it depends on what the user-facing app actually needs. A support chatbot where users are actively waiting on a response can't tolerate a 4-6 second delay per turn, so the latency difference would push me toward the faster (pricier) model despite the cost gap widening fast at scale. A background/batch use case – e.g., summarizing documents overnight - could absorb the extra seconds and makes the cheaper option more appealing.
 
 ## Activity 1: RAGAS Evaluation with Cost Analysis
 
