@@ -2,7 +2,9 @@ import os
 import subprocess
 from pathlib import Path
 from claude_agent_sdk import tool, create_sdk_mcp_server
+from dotenv import load_dotenv
 
+load_dotenv()
 REPO_PATH = os.getenv("REPO_PATH", "")
 
 @tool("list_packages", "List all packages in the vercel monorepo", {})
@@ -31,7 +33,8 @@ async def find_exports(args):
         ["grep", "-r", "--include=*.ts", "^export", str(pkg_src)],
         capture_output=True, text=True,
     )
-    lines = result.stdout.strip().split("\n")[:50]
+    text = result.stdout or result.stderr
+    lines = text.strip().split("\n")[:50]
     return {"content": [{"type": "text", "text": "\n".join(lines)}]}
 
 @tool("recent_features", "Summarize recent additions from git history", {"days": int})
