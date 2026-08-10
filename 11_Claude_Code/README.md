@@ -66,9 +66,7 @@ While scaffolding in Task 3 you used **plan mode** before letting Claude Code wr
 
 #### ✅ Answer
 
-An agent with shell access can take irreversible actions — deleting files, pushing to remote branches, writing secrets into committed code, or installing packages with unintended side effects. Without a permission system, the model's best guess about intent becomes an immediate system action with no human checkpoint. Permissions decouple *understanding the request* from *executing the request*, giving you a place to catch misaligned assumptions before they cost anything.
-
-Plan mode is especially valuable at project start because an empty directory gives the agent no existing structure to constrain its choices. There are no files, conventions, or prior decisions to anchor to — the agent must make dozens of architectural decisions simultaneously (folder layout, naming conventions, framework choices, test strategy). Surfacing those choices as a plan before any file is written lets you validate the design in seconds rather than discover after 30 generated files that the agent picked the wrong structure or omitted a critical component. The cost of a wrong assumption grows with every file built on top of it.
+An agent with shell access can take irreversible actions — deleting files, pushing to remote branches, writing secrets into committed code, or installing packages with unintended side effects. Without a permission system, the model's best guess about intent becomes an immediate system action with no human checkpoint. Permissions decouple understanding the request from executing the request, giving you a place to catch misaligned assumptions before they cost anything. Plan mode further bifurcates thinking from building. It creates additional guardrails to prevent rouge action.
 
 ### ❓ Question #2
 
@@ -76,9 +74,9 @@ Plan mode is especially valuable at project start because an empty directory giv
 
 #### ✅ Answer
 
-`CLAUDE.md` should hold durable, session-agnostic facts: how to run the project, the architectural seams (e.g. "agent logic lives only in `agent.py`"), conventions the model would otherwise guess wrong, and things that stay true across every future session. Our `chat-app/CLAUDE.md` contains run commands, an architecture note, and key conventions (read-only tools, tools in `tools.py`, `.env` is gitignored). These are facts that don't change turn-to-turn.
+`CLAUDE.md` should hold durable, session-agnostic facts: how to run the project, the architectural seams (e.g. "agent logic lives only in `agent.py`"), conventions the model would otherwise guess wrong, and things that stay true across every future session. 
 
-What doesn't belong: current work state, in-progress task lists, recent decisions, or anything that will be stale next session. Those belong in the conversation itself, in commit messages, or in a plan file — not burned into persistent context. In Session 3 we learned that context is finite and every token counts: putting ephemeral state in `CLAUDE.md` wastes that budget and pollutes future sessions with outdated facts. The principle is the same — memory should store what's stably true, not what's momentarily true.
+What doesn't belong: current work state, in-progress task lists, recent decisions, or anything that will be stale next session. Those belong in the conversation itself, in commit messages, or in a plan file — not burned into persistent context. In Session 3 we learned that context is finite and every token counts: putting ephemeral state in `CLAUDE.md` wastes that budget and pollutes future sessions with outdated facts.
 
 ### ❓ Question #3
 
@@ -86,9 +84,9 @@ The Agent SDK gives you the same agent loop that powers Claude Code. Compare thi
 
 #### ✅ Answer
 
-The Agent SDK gives you the full Claude Code loop for free: tool dispatch, tool result ingestion, multi-turn conversation management, session persistence, and the same model orchestration that makes Claude Code functional. You get session resumption (`resume=session_id`), streaming via an async generator, and built-in support for both native tools (Read, Glob, Grep) and in-process MCP servers — with no state machine to write.
+Tool dispatch, tool result ingestion, multi-turn conversation management, session persistence, and built-in support for both native tools (Read, Glob, Grep) and in-process MCP servers with no state machine to write.
 
-What you give up is the control you had with LangGraph: explicit graph topology, per-node state transformations, conditional routing based on your own logic, the ability to inject state between turns, and visibility into exactly what's happening inside each turn. With LangGraph you could add a retry node, enforce a maximum reasoning depth with your own counter, or branch based on tool output content. With the Agent SDK the loop is opaque — you get events (`SystemMessage`, `AssistantMessage`, `ResultMessage`) and you can influence it via `max_turns` and `allowed_tools`, but you can't rewire the internal graph. The tradeoff is power vs. simplicity: the SDK handles the hard parts so you can focus on tooling and UX.
+You give up control on conditional routing based on your own logic and visibility into exactly what's happening inside each turn. The Agent SDK the loop is opaqueb and you can't rewire the internal graph. The tradeoff is power vs. simplicity: the SDK handles the hard parts so you can focus on tooling and UX.
 
 ### ❓ Question #4
 
@@ -96,9 +94,9 @@ Your chat app could have called a chat completions API directly, the way you did
 
 #### ✅ Answer
 
-Routing through `query()` gives the agent the ability to answer questions it couldn't answer from training data alone: it can read actual files, search actual git history, and list actual packages in the repository it's being asked about. A plain chat completion can only regurgitate what the model learned during training — it would hallucinate package names, invent file paths, and produce confidently wrong answers about the current state of the repo. Tools turn the model from a static fact-retriever into a live investigator.
+It gives the agent the ability to answer questions it couldn't answer from training data alone. It can read actual files, search actual git history, and list actual packages in the repository it's being asked about. A plain chat completion can only regurgitate what the model learned during training — it could hallucinate package names, invent file paths, and produce confidently wrong answers about the current state of the repo.
 
-The new risks an agent with tools introduces: it can take actions in the world, not just produce text. A tool that runs shell commands could be prompted to delete files, exfiltrate data, or execute arbitrary code if the allowlist is too broad. Even read-only tools can be misused — a tool that reads files could be used to read secrets if pointed at the wrong path. The tool allowlist (`allowed_tools = ["Read", "Glob", "Grep"]`) bounds the agent to read-only filesystem operations on the target repo, with no write, edit, or shell execution permitted. Combined with `cwd=REPO_PATH`, all file access is scoped to the repo directory. This means the worst the agent can do is read files — it cannot write, delete, or make network requests.
+New risks an agent with tools introduces: it can take actions in the world, not just produce text. A tool that runs shell commands could be prompted to delete files, exfiltrate data, or execute arbitrary code if the allowlist is too broad. Even read-only tools can be misused — a tool that reads files could be used to read secrets if pointed at the wrong path. The allowlist was used to bind the tool to read-only operations without human approval/review. Permissions mode is another safeguard that can require explicity review and approval of writes.
 
 ## Activity 1: Level Up the Chat App
 
