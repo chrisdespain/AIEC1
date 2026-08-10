@@ -48,6 +48,7 @@ async def chat(req: ChatRequest):
 
     async def live_stream():
         result_text = None
+        tool_used = False
         async for chunk in agent.stream_response(req.message, req.conversation_id):
             yield chunk
             if chunk.startswith("data: "):
@@ -55,9 +56,11 @@ async def chat(req: ChatRequest):
                     data = json.loads(chunk[6:].strip())
                     if data.get("type") == "result":
                         result_text = data.get("text", "")
+                    elif data.get("type") == "tool":
+                        tool_used = True
                 except json.JSONDecodeError:
                     pass
-        if result_text:
+        if result_text and tool_used:
             cache.put(req.message, result_text)
 
     return StreamingResponse(live_stream(), media_type="text/event-stream")
