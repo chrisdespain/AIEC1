@@ -161,7 +161,7 @@
     return text
       .replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) =>
         `<pre><code class="language-${lang || 'plaintext'}">${escHtml(code.trim())}</code></pre>`)
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/`([^`]+)`/g, (_, code) => `<code>${escHtml(code)}</code>`)
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\n/g, '<br>');
   }

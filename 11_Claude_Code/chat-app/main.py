@@ -41,6 +41,7 @@ async def faq():
 async def chat(req: ChatRequest):
     cached_answer = cache.get(req.message)
     if cached_answer:
+        cache.hit(req.message)
         async def cached_stream():
             yield f'data: {json.dumps({"type": "result", "text": cached_answer, "cached": True})}\n\n'
         return StreamingResponse(cached_stream(), media_type="text/event-stream")

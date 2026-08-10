@@ -15,6 +15,11 @@ def put(query: str, answer: str) -> None:
     _store[key] = answer
     _freq[key] = _freq.get(key, 0) + 1
 
+def hit(query: str) -> None:
+    key = normalize(query)
+    if key in _store:
+        _freq[key] = _freq.get(key, 0) + 1
+
 def top(n: int = 10) -> list[dict]:
     ranked = sorted(_freq.keys(), key=lambda k: _freq[k], reverse=True)
     return [
