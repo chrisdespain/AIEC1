@@ -38,12 +38,11 @@ def main():
     print(f"Loaded {len(docs)} document chunks from {REPO_PATH}")
 
     generator = TestsetGenerator.from_langchain(
-        generator_llm=ChatOpenAI(model="gpt-4o-mini"),
-        critic_llm=ChatOpenAI(model="gpt-4o-mini"),
-        embeddings=OpenAIEmbeddings(),
+        llm=ChatOpenAI(model="gpt-4o-mini"),
+        embedding_model=OpenAIEmbeddings(),
     )
 
-    testset = generator.generate_with_langchain_docs(docs, test_size=15)
+    testset = generator.generate_with_langchain_docs(docs, testset_size=15)
     records = testset.to_pandas().to_dict(orient="records")
 
     out = Path(__file__).parent / "test_cases.json"
