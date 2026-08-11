@@ -12,7 +12,7 @@ REPO_PATH = os.getenv("REPO_PATH", "")
 
 def load_documents():
     from langchain_community.document_loaders import TextLoader
-    from langchain.text_splitter import RecursiveCharacterTextSplitter
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     repo = Path(REPO_PATH)
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
