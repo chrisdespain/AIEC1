@@ -24,14 +24,15 @@ async def run_case(question: str) -> tuple[str, list[str]]:
             continue
         if ev["type"] == "result":
             answer = ev["text"]
-        elif ev["type"] == "tool" and ev["name"] in ("Read", "Glob", "Grep"):
-            contexts.append(ev["input"])
+        elif ev["type"] == "tool_result":
+            contexts.append(ev["content"])
     return answer, contexts
 
 async def main():
+    from langchain_openai import ChatOpenAI, OpenAIEmbeddings
     from datasets import Dataset
     from ragas import evaluate
-    from ragas.metrics import answer_relevancy, faithfulness, context_precision
+    from ragas.metrics import answer_relevancy, faithfulness, context_precision  # noqa: F401
 
     test_path = Path(__file__).parent / "test_cases.json"
     if not test_path.exists():
@@ -56,7 +57,14 @@ async def main():
         })
 
     dataset = Dataset.from_list(rows)
-    results = evaluate(dataset, metrics=[answer_relevancy, faithfulness, context_precision])
+    # evaluate() auto-wraps langchain LLM/embeddings in LangchainLLMWrapper /
+    # LangchainEmbeddingsWrapper, which is the interface the v0 singletons expect.
+    results = evaluate(
+        dataset,
+        metrics=[answer_relevancy, faithfulness, context_precision],
+        llm=ChatOpenAI(model="gpt-4o-mini", max_tokens=2048),
+        embeddings=OpenAIEmbeddings(),
+    )
 
     print("\n=== RAGAS Results ===")
     print(results)

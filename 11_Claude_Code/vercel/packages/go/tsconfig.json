@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "types": ["node", "vitest/globals"],
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "tar": ["./src/tar.d.ts"]
+    }
+  },
+  "extends": "../../tsconfig.base.json",
+  "include": ["src/**/*"]
+}

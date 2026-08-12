@@ -3,8 +3,8 @@ import os
 from typing import AsyncGenerator
 from claude_agent_sdk import (
     query, ClaudeAgentOptions,
-    SystemMessage, AssistantMessage, ResultMessage,
-    TextBlock, ToolUseBlock,
+    SystemMessage, AssistantMessage, UserMessage, ResultMessage,
+    TextBlock, ToolUseBlock, ToolResultBlock,
 )
 from dotenv import load_dotenv
 
@@ -57,6 +57,7 @@ async def stream_response(
     )
 
     try:
+        _tool_id_to_name: dict[str, str] = {}
         async for msg in query(prompt=message, options=opts):
             if isinstance(msg, SystemMessage) and msg.subtype == "init":
                 _sessions[conversation_id] = msg.data["session_id"]
@@ -66,10 +67,21 @@ async def stream_response(
                     if isinstance(block, TextBlock):
                         yield f'data: {json.dumps({"type": "text", "delta": block.text})}\n\n'
                     elif isinstance(block, ToolUseBlock):
+                        _tool_id_to_name[block.id] = block.name
                         raw = str(block.input)
                         inp = raw[:200] + ("…" if len(raw) > 200 else "")
                         yield f'data: {json.dumps({"type": "tool", "name": block.name, "input": inp})}\n\n'
                     # ThinkingBlock and other block types are silently skipped
+
+            elif isinstance(msg, UserMessage):
+                if isinstance(msg.content, list):
+                    for block in msg.content:
+                        if isinstance(block, ToolResultBlock) and not block.is_error:
+                            tool_name = _tool_id_to_name.get(block.tool_use_id, "")
+                            # Only emit content for text-returning tools (not Glob path lists)
+                            if tool_name in ("Read", "Grep") and isinstance(block.content, str):
+                                snippet = block.content[:2000] + ("…" if len(block.content) > 2000 else "")
+                                yield f'data: {json.dumps({"type": "tool_result", "tool": tool_name, "content": snippet})}\n\n'
 
             elif isinstance(msg, ResultMessage):
                 yield f'data: {json.dumps({"type": "result", "text": msg.result})}\n\n'
